@@ -14,7 +14,7 @@ This is the frontend application for the EduSync learning management system.
 1. In the Azure Portal, create a new Static Web App resource
 2. Connect it to your GitHub repository
 3. Configure the build settings:
-   - App location: `/`
+   - App location: `.` (use current directory)
    - API location: `` (leave empty)
    - Output location: `build`
 

@@ -35,28 +35,51 @@ jobs:
         run: npm run build
           
       # Deploy to Azure Static Web Apps
+      - name: Check if token exists
+        id: check_token
+        run: |
+          if [ -n "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}" ]; then
+            echo "Token exists, proceeding with deployment"
+            echo "token_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "No deployment token found, skipping deployment"
+            echo "token_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Deploy to Azure Static Web Apps
       - name: Build And Deploy
         id: builddeploy
+        if: steps.check_token.outputs.token_exists == 'true'
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"
+          app_location: "."
           api_location: ""
           output_location: "build"
           skip_app_build: true # We already built the app in the previous step
-          skip_deploy_on_missing_secrets: true
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
     steps:
+      - name: Check if token exists
+        id: check_token
+        run: |
+          if [ -n "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}" ]; then
+            echo "Token exists, proceeding with close action"
+            echo "token_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "No deployment token found, skipping close action"
+            echo "token_exists=false" >> $GITHUB_OUTPUT
+          fi
+          
       - name: Close Pull Request
         id: closepullrequest
+        if: steps.check_token.outputs.token_exists == 'true'
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: "close"
-          skip_deploy_on_missing_secrets: true 
+          action: "close" 
