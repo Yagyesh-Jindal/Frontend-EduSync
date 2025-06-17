@@ -46,6 +46,8 @@ jobs:
           export CI=false
           export DISABLE_ESLINT_PLUGIN=true
           npx react-scripts build
+          echo "Build completed, listing build folder:"
+          ls -la build/
         env:
           CI: false
           DISABLE_ESLINT_PLUGIN: true
@@ -58,9 +60,9 @@ jobs:
           azure_static_web_apps_api_token: "3ef14cfdc7cc28418acb19cd4ef0b077ec16a2aade430943c2867026c51269fe02-f432f8e3-f722-471a-8854-6d454433cb410001108010ffca00"
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "."
+          app_location: "build"
           api_location: ""
-          output_location: "build"
+          output_location: ""
           skip_app_build: true # We already built the app in the previous step
 
   close_pull_request_job:
