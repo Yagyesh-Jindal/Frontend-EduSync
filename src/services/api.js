@@ -1,7 +1,8 @@
 import axios from "axios"
 
 // Force http://localhost:5062/api as the API URL
-const API_BASE_URL = "http://localhost:5062/api"
+// const API_BASE_URL = "http://localhost:5062/api"
+const API_BASE_URL = "https://edusync-backend1-dtczecggf2fedqhr.centralindia-01.azurewebsites.net/api"
 
 // Create axios instance for authentication
 export const authAPI = axios.create({
