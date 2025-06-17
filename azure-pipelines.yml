@@ -7,9 +7,6 @@ trigger:
   branches:
     include:
       - master
-  paths:
-    include:
-      - frontend/*
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -22,32 +19,57 @@ steps:
 
 # Check current directory structure for debugging
 - script: |
-    pwd
+    echo "Current directory: $(pwd)"
+    echo "Directory contents:"
     ls -la
+    echo "Repository root directory contents:"
+    ls -la $(Build.SourcesDirectory)
   displayName: 'Check working directory'
 
+# Use conditional logic to determine where to run the build
 - script: |
+    if [ -d "$(Build.SourcesDirectory)/frontend" ]; then
+      echo "Frontend directory found at $(Build.SourcesDirectory)/frontend"
+      cd $(Build.SourcesDirectory)/frontend
+    else
+      echo "Frontend directory not found at expected path, assuming we're already in it"
+    fi
+    
     npm ci
-  workingDirectory: $(Build.SourcesDirectory)/frontend
   displayName: 'npm install'
 
 - script: |
-    chmod +x node_modules/.bin/react-scripts
+    if [ -d "$(Build.SourcesDirectory)/frontend" ]; then
+      cd $(Build.SourcesDirectory)/frontend
+    fi
+    
+    chmod +x node_modules/.bin/react-scripts || echo "Could not chmod react-scripts, continuing anyway"
     npm run build
-  workingDirectory: $(Build.SourcesDirectory)/frontend
   displayName: 'npm build'
 
 # Check build output directory
 - script: |
+    if [ -d "$(Build.SourcesDirectory)/frontend" ]; then
+      cd $(Build.SourcesDirectory)/frontend
+    fi
+    
+    echo "Contents of current directory:"
     ls -la
-    ls -la build || echo "Build directory not found"
-  workingDirectory: $(Build.SourcesDirectory)/frontend
+    
+    if [ -d "build" ]; then
+      echo "Build directory found, contents:"
+      ls -la build
+    else
+      echo "Build directory not found!"
+      echo "Checking other possible locations..."
+      find $(Build.SourcesDirectory) -name "build" -type d
+    fi
   displayName: 'Check build output'
 
 - task: CopyFiles@2
   inputs:
-    sourceFolder: '$(Build.SourcesDirectory)/frontend/build'
-    contents: '**'
+    sourceFolder: '$(Build.SourcesDirectory)'
+    contents: '**/build/**'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
   displayName: 'Copy build files'
   continueOnError: true
