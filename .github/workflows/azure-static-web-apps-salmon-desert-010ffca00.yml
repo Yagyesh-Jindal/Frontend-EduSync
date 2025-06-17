@@ -22,6 +22,41 @@ jobs:
         with:
           submodules: true
           lfs: false
+          
+      # Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      # Install dependencies with force
+      - name: Install dependencies
+        run: |
+          npm ci --unsafe-perm
+          npm install -g react-scripts@5.0.1
+        
+      # Fix permissions with global react-scripts
+      - name: Fix permissions with debug info
+        run: |
+          echo "Finding react-scripts location..."
+          which react-scripts
+          echo "Checking global installation:"
+          ls -la $(npm root -g)/react-scripts/bin/
+          echo "Setting permissions on local node_modules:"
+          sudo chmod -R 777 node_modules/.bin/
+          echo "Final verification:"
+          npx react-scripts --version
+        
+      # Use global react-scripts for building
+      - name: Build
+        run: |
+          echo "Starting build process with global react-scripts..."
+          export CI=false
+          export DISABLE_ESLINT_PLUGIN=true
+          npx react-scripts build
+          echo "Build completed, listing build folder:"
+          ls -la build/
+          
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
       - name: Get Id Token
@@ -36,7 +71,7 @@ jobs:
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_DESERT_010FFCA00 }}
+          azure_static_web_apps_api_token: "3ef14cfdc7cc28418acb19cd4ef0b077ec16a2aade430943c2867026c51269fe02-f432f8e3-f722-471a-8854-6d454433cb410001108010ffca00"
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
@@ -44,6 +79,7 @@ jobs:
           api_location: "" # Api source code path - optional
           output_location: "build" # Built app content directory - optional
           github_id_token: ${{ steps.idtoken.outputs.result }}
+          skip_app_build: true # We already built the app in the previous steps
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
@@ -55,4 +91,5 @@ jobs:
         id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
+          azure_static_web_apps_api_token: "3ef14cfdc7cc28418acb19cd4ef0b077ec16a2aade430943c2867026c51269fe02-f432f8e3-f722-471a-8854-6d454433cb410001108010ffca00"
           action: "close"
