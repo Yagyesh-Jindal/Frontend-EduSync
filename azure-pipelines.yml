@@ -4,18 +4,42 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 trigger:
-- master
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - frontend/*
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '20.x'
+    versionSpec: '18.x'
   displayName: 'Install Node.js'
 
 - script: |
-    npm install
+    cd frontend
+    npm ci
+  displayName: 'npm install'
+
+- script: |
+    cd frontend
+    chmod +x node_modules/.bin/react-scripts
     npm run build
-  displayName: 'npm install and build'
+  displayName: 'npm build'
+
+- task: CopyFiles@2
+  inputs:
+    sourceFolder: 'frontend/build'
+    contents: '**'
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+  displayName: 'Copy build files'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'frontend-build'
+  displayName: 'Publish artifacts'
