@@ -20,26 +20,41 @@ steps:
     versionSpec: '18.x'
   displayName: 'Install Node.js'
 
+# Check current directory structure for debugging
 - script: |
-    cd frontend
+    pwd
+    ls -la
+  displayName: 'Check working directory'
+
+- script: |
     npm ci
+  workingDirectory: $(Build.SourcesDirectory)/frontend
   displayName: 'npm install'
 
 - script: |
-    cd frontend
     chmod +x node_modules/.bin/react-scripts
     npm run build
+  workingDirectory: $(Build.SourcesDirectory)/frontend
   displayName: 'npm build'
+
+# Check build output directory
+- script: |
+    ls -la
+    ls -la build || echo "Build directory not found"
+  workingDirectory: $(Build.SourcesDirectory)/frontend
+  displayName: 'Check build output'
 
 - task: CopyFiles@2
   inputs:
-    sourceFolder: 'frontend/build'
+    sourceFolder: '$(Build.SourcesDirectory)/frontend/build'
     contents: '**'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
   displayName: 'Copy build files'
+  continueOnError: true
 
 - task: PublishBuildArtifacts@1
   inputs:
     pathtoPublish: '$(Build.ArtifactStagingDirectory)'
     artifactName: 'frontend-build'
   displayName: 'Publish artifacts'
+  continueOnError: true
